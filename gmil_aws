@@ -1,0 +1,30 @@
+
+# Determine if the library has already been included and if so don't
+# bother including it again
+
+ifndef __gmil_aws_included
+
+# Prevent reinclusion of the library
+
+__gmil_aws_included := $(true)
+
+# Try to determine where this file is located.  If the caller did
+# include /foo/gmil_aws then extract the /foo/ so that __gmil_aws gets
+# included transparently
+
+__gmil_aws_root :=
+
+ifneq ($(MAKEFILE_LIST),)
+__gmil_aws_root := $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+
+# If there are any spaces in the path in __gmil_aws_root then give up
+
+ifeq (1,$(words $(__gmil_aws_root)))
+__gmil_aws_root := $(patsubst %gmil_aws,%,$(__gmil_aws_root))
+endif
+
+endif
+
+include $(__gmil_aws_root)__gmil_aws.mk
+
+endif # __gmil_aws_included
