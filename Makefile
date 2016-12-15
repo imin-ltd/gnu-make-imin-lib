@@ -1,7 +1,7 @@
 include gmil
 
 GMIL_VERSION := $(subst $(__gmil_space),.,$(gmil_version))
-DIST := imin-gnu-make-lib-$(GMIL_VERSION)
+DIST := gnu-make-imin-lib-$(GMIL_VERSION)
 TAR := $(DIST).tar.gz
 
 PREFIX = $(DESTDIR)/usr/local
@@ -10,7 +10,7 @@ INCLUDEDIR = $(PREFIX)/include
 .PHONY: dist
 dist: $(TAR)
 
-SOURCES = gmil __gmil.mk gmil_shell __gmil_shell.mk gmil_aws __gmil_aws.mk
+SOURCES = gmil __gmil.mk gmil_shell __gmil_shell.mk gmil_aws __gmil_aws.mk gmil_json __gmil_json.mk
 
 $(TAR): $(SOURCES)
 	@echo Making $@
