@@ -26,9 +26,10 @@ aws s3 cp - s3://$(strip $(2)) <<< '$(strip $(1))'
 endef
 
 define aws_s3_get_content_handler
-$(if $(call eq,$(2),0),\
-	$(1),\
-	$(if $(call eq,$(2),1),,$(error aws_s3_get_content_handler: $(2) $(1))))
+$(strip
+  $(if $(call eq,$(2),0),\
+    $(1),\
+    $(if $(call eq,$(2),1),,$(error aws_s3_get_content_handler: $(2) $(1)))))
 endef
 
 # 1. source

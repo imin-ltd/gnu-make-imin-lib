@@ -20,10 +20,9 @@ $(TAR): $(SOURCES)
 	@tar -c -z -f $@ $(DIST)
 	@rm -rf $(DIST)
 
-# .PHONY: test
-# test:
-# 	@$(MAKE) --no-print-directory -f gmil-tests
-# 	@$(MAKE) --no-print-directory -f gmil-tests EXPORT_ALL=1
+.PHONY: test
+test:
+	@$(MAKE) --no-print-directory -f gmil_test.mk
 
 .PHONY: install
 install: $(SOURCES)
