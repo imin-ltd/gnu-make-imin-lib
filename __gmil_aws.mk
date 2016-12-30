@@ -11,7 +11,7 @@ include $(__gmil_aws_root)gmil_shell
 # 2. bucket
 # TODO assert single result
 aws_s3_key_contains = $(shell aws s3api list-objects --bucket $(2) | \
-	jq -r --arg input $(1) '.Contents[].Key | select(. | contains($$input))')
+  jq -r --arg input $(1) '.Contents[].Key | select(. | contains($$input))')
 
 # 1. source
 # 2. destination
@@ -38,7 +38,7 @@ aws_s3_get_content = $(call shell_result,aws s3 cp s3://$(1) -,aws_s3_get_conten
 # 1. function name
 # 2. function description
 aws_lambda_publish_version = $(shell aws lambda publish-version --function-name $(1) --description $(2) | \
-	jq -r '.Version')
+  jq -r '.Version')
 
 # 1. template (defaulted)
 define aws_cf_validate_template
@@ -47,24 +47,24 @@ endef
 
 # 1. stack name
 aws_cf_stack_exists? = $(shell aws cloudformation describe-stacks | \
-	jq --arg stack $(1) -e '.Stacks[].StackName | select(. == $$stack)')
+  jq --arg stack $(1) -e '.Stacks[].StackName | select(. == $$stack)')
 
 # 1. stack params
 define aws_cf_build_params
 $(strip \
-	$(foreach param,$(1), \
-		$(if $($(param)), \
-			$(shell printf "ParameterKey=%s,ParameterValue='%s'" $(param) '$($(param))'))))
+  $(foreach param,$(1), \
+    $(if $($(param)), \
+      $(shell printf "ParameterKey=%s,ParameterValue='%s'" $(param) '$($(param))'))))
 endef
 
 # 1. stack name
 # 2. stack params
 # 3. template (defaulted)
 define aws_cf_create_stack
-aws cloudformation create-stack\
-	--stack-name $(1)\
-	--template-body file://$(if $(3),$(3),cf-template.yml)\
-	--parameters $(call aws_cf_build_params,$(2))
+aws cloudformation create-stack \
+  --stack-name $(1) \
+  --template-body file://$(if $(3),$(3),cf-template.yml) \
+  --parameters $(call aws_cf_build_params,$(2))
 aws cloudformation wait stack-create-complete --stack-name $(1)
 endef
 
@@ -72,10 +72,10 @@ endef
 # 2. stack params
 # 3. template (defaulted)
 define aws_cf_update_stack
-aws cloudformation update-stack\
-	--stack-name $(1)\
-	--template-body file://$(if $(3),$(3),cf-template.yml)\
-	--parameters $(call aws_cf_build_params,$(2))
+aws cloudformation update-stack \
+  --stack-name $(1) \
+  --template-body file://$(if $(3),$(3),cf-template.yml) \
+  --parameters $(call aws_cf_build_params,$(2))
 aws cloudformation wait stack-update-complete --stack-name $(1)
 endef
 
@@ -85,6 +85,6 @@ endef
 define aws_cf_sync_stack
 $(call aws_cf_validate_template,$(3))
 $(if $(call aws_cf_stack_exists?,$(1)), \
-	$(call aws_cf_update_stack,$(1),$(2),$(3)), \
-	$(call aws_cf_create_stack,$(1),$(2),$(3)))
+  $(call aws_cf_update_stack,$(1),$(2),$(3)), \
+  $(call aws_cf_create_stack,$(1),$(2),$(3)))
 endef
