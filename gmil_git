@@ -1,0 +1,30 @@
+
+# Determine if the library has already been included and if so don't
+# bother including it again
+
+ifndef __gmil_git_included
+
+# Prevent reinclusion of the library
+
+__gmil_git_included := $(true)
+
+# Try to determine where this file is located.  If the caller did
+# include /foo/gmil_git then extract the /foo/ so that __gmil_git gets
+# included transparently
+
+__gmil_git_root :=
+
+ifneq ($(MAKEFILE_LIST),)
+__gmil_git_root := $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+
+# If there are any spaces in the path in __gmil_git_root then give up
+
+ifeq (1,$(words $(__gmil_git_root)))
+__gmil_git_root := $(patsubst %gmil_git,%,$(__gmil_git_root))
+endif
+
+endif
+
+include $(__gmil_git_root)__gmil_git.mk
+
+endif # __gmil_git_included

@@ -7,6 +7,10 @@ include $(__gmil_aws_root)gmil
 
 include $(__gmil_aws_root)gmil_shell
 
+include $(__gmil_aws_root)gmil_git
+
+aws_iam_user_name = $(shell AWS_DEFAULT_PROFILE=default aws iam get-user | jq -r '.User.UserName')
+
 # 1. input
 # 2. bucket
 # TODO assert single result
@@ -49,6 +53,18 @@ endef
 aws_cf_stack_exists? = $(shell aws cloudformation describe-stacks | \
   jq --arg stack $(1) -e '.Stacks[].StackName | select(. == $$stack)')
 
+# 1. stack name
+define aws_cf_stack_events_most_recent_create_failed
+aws cloudformation describe-stack-events --stack-name $(1) | \
+  jq -C '.StackEvents | map(select(.ResourceStatus == "CREATE_FAILED")) | .[0] | del(.ResourceProperties) | objects'
+endef
+
+# 1. stack name
+define aws_cf_stack_events_most_recent_update_failed
+aws cloudformation describe-stack-events --stack-name $(1) | \
+  jq -C '.StackEvents | map(select(.ResourceStatus == "UPDATE_FAILED")) | .[0] | del(.ResourceProperties) | objects'
+endef
+
 # 1. stack params
 define aws_cf_build_params
 $(strip \
@@ -57,34 +73,50 @@ $(strip \
       $(shell printf "ParameterKey=%s,ParameterValue='%s'" $(param) '$($(param))'))))
 endef
 
+aws_comma := ,
+
 # 1. stack name
-# 2. stack params
-# 3. template (defaulted)
+# 2. template
+# 3. stack params
+# 4. stack caps
 define aws_cf_create_stack
-aws cloudformation create-stack \
+$(strip aws cloudformation create-stack \
   --stack-name $(1) \
-  --template-body file://$(if $(3),$(3),cf-template.yml) \
-  --parameters $(call aws_cf_build_params,$(2))
-aws cloudformation wait stack-create-complete --stack-name $(1)
+  --template-body file://$(2) \
+  $(if $(3),--parameters $(call aws_cf_build_params,$(3)),) \
+  $(if $(4),--capabilities $(4),) \
+  --tags \
+    Key=GitCommit,Value=$(git_commit) \
+    Key=GitBranch,Value=$(git_branch) \
+    Key=AwsIamUserName,Value=$(aws_iam_user_name) \
+    Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
+aws cloudformation wait stack-create-complete --stack-name $(1) || { $(call aws_cf_stack_events_most_recent_create_failed,$(1)); exit 1; }
 endef
 
 # 1. stack name
-# 2. stack params
-# 3. template (defaulted)
+# 2. template
+# 3. stack params
+# 4. stack caps
 define aws_cf_update_stack
-aws cloudformation update-stack \
+$(strip aws cloudformation update-stack \
   --stack-name $(1) \
-  --template-body file://$(if $(3),$(3),cf-template.yml) \
-  --parameters $(call aws_cf_build_params,$(2))
-aws cloudformation wait stack-update-complete --stack-name $(1)
+  --template-body file://$(2) \
+  $(if $(3),--parameters $(call aws_cf_build_params,$(3)),) \
+  $(if $(4),--capabilities $(4),) \
+  --tags \
+    Key=GitCommit,Value=$(git_commit) \
+    Key=GitBranch,Value=$(git_branch) \
+    Key=AwsIamUserName,Value=$(aws_iam_user_name) \
+    Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
+aws cloudformation wait stack-update-complete --stack-name $(1) || { $(call aws_cf_stack_events_most_recent_update_failed,$(1)); exit 1; }
 endef
 
 # 1. stack name
-# 2. stack params
-# 3. template (defaulted)
+# 2. template
+# 3. stack params
+# 4. stack caps
 define aws_cf_sync_stack
-$(call aws_cf_validate_template,$(3))
 $(if $(call aws_cf_stack_exists?,$(1)), \
-  $(call aws_cf_update_stack,$(1),$(2),$(3)), \
-  $(call aws_cf_create_stack,$(1),$(2),$(3)))
+  $(call aws_cf_update_stack,$(1),$(2),$(3),$(4)), \
+  $(call aws_cf_create_stack,$(1),$(2),$(3),$(4)))
 endef

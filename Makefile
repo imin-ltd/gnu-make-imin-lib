@@ -10,7 +10,7 @@ INCLUDEDIR = $(PREFIX)/include
 .PHONY: dist
 dist: $(TAR)
 
-SOURCES = gmil __gmil.mk gmil_shell __gmil_shell.mk gmil_aws __gmil_aws.mk gmil_json __gmil_json.mk
+SOURCES = gmil __gmil.mk gmil_shell __gmil_shell.mk gmil_aws __gmil_aws.mk gmil_json __gmil_json.mk gmil_git __gmil_git.mk
 
 $(TAR): $(SOURCES)
 	@echo Making $@
