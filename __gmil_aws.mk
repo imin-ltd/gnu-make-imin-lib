@@ -60,15 +60,15 @@ aws cloudformation describe-stack-events --stack-name $(1) | \
   jq -C '.StackEvents | map(select(.ResourceStatus == "UPDATE_FAILED")) | .[0] | del(.ResourceProperties) | objects'
 endef
 
+aws_comma := ,
+
 # 1. stack params
 define aws_cf_build_params
 $(strip \
   $(foreach param,$(1), \
     $(if $($(param)), \
-      $(shell printf "ParameterKey=%s,ParameterValue='%s'" $(param) '$($(param))'))))
+      ParameterKey=$(param)$(aws_comma)ParameterValue='$(subst $(aws_comma),\$(aws_comma),$($(param)))')))
 endef
-
-aws_comma := ,
 
 # 1. stack name
 # 2. template
