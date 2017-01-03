@@ -12,6 +12,8 @@ include gmil_shell
 
 include gmil_aws
 
+$(call shell_assert_commands,$(GMIL_COMMANDS))
+
 ECHO := /bin/echo
 
 start_test = $(if $0,$(shell $(ECHO) -n "Testing '$1': " >&2))$(eval current_test := OK)

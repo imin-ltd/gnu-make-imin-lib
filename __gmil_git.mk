@@ -1,9 +1,7 @@
 
-# TODO command errors in functions should abort the build?
+GMIL_COMMANDS += git sed jq
 
 include $(__gmil_aws_root)gmil_shell
-
-$(call shell_assert_commands,git sed jq)
 
 git_commit = $(if $(GIT_COMMIT),$(GIT_COMMIT),$(shell git rev-parse HEAD))
 

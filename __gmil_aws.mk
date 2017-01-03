@@ -1,7 +1,5 @@
-# GNU Make AWS Library
 
-# TODO assert function required commands present
-# TODO command errors in functions should abort the build?
+GMIL_COMMANDS += aws jq
 
 include $(__gmil_aws_root)gmil
 
@@ -30,10 +28,7 @@ aws s3 cp - s3://$(strip $(2)) <<< '$(strip $(1))'
 endef
 
 define aws_s3_get_content_handler
-$(strip
-  $(if $(call eq,$(2),0),\
-    $(1),\
-    $(if $(call eq,$(2),1),,$(error aws_s3_get_content_handler: $(2) $(1)))))
+$(if $(call eq,$(2),0),$(1),$(if $(call eq,$(2),1),,$(error aws_s3_get_content_handler: $(2) $(1))))
 endef
 
 # 1. source

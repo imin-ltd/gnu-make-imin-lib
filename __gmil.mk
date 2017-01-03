@@ -15,3 +15,12 @@ eq = $(strip \
 $(if $(or $(1),$(2)), \
 $(and $(findstring $(1),$(2)),$(findstring $(2),$(1))), \
 true))
+
+# 1. must be true or the assertion will fail
+# 2. assertion failure message
+assert = $(if $(2),$(if $(1),,$(error Assertion failure: $(2))))
+
+# 1. expected value
+# 2. actual value
+# 3. assertion failure message fn (optional)
+assert_equal = $(call assert,$(call eq,$(1),$(2)),$(if $(3),$(call $(3),$(1),$(2)),expected '$(1)', actual '$(2)'))

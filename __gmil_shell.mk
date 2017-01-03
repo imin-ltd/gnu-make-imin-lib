@@ -1,8 +1,16 @@
 
+include $(__gmil_aws_root)gmil
+
+# 1. command to test on path
+shell_command? = $(if $(shell command -v $(1) 2> /dev/null),$(1),)
+
+# 1. expected commands to find on path
+# 2. actual commands found on path
+shell_assert_commands_failure_message = expected commands on PATH '$(1)', actual '$(2)'
+
 # 1. commands to assert on path
 define shell_assert_commands
-$(foreach cmd,$(1),\
-  $(if $(shell command -v $(cmd) 2> /dev/null),,$(error Command '$(cmd)' not found in PATH)))
+$(call assert_equal,$(sort $(1)),$(strip $(foreach cmd,$(sort $(1)),$(call shell_command?,$(cmd)))),shell_assert_commands_failure_message)
 endef
 
 # 1. shell arg
