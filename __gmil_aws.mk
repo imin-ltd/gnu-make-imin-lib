@@ -72,14 +72,15 @@ endef
 
 # 1. stack name
 # 2. template
-# 3. stack params
-# 4. stack caps
+# 3. stack param names
+# 4. stack param file
+# 5. stack caps
 define aws_cf_create_stack
 $(strip aws cloudformation create-stack \
   --stack-name $(1) \
   --template-body file://$(2) \
-  $(if $(3),--parameters $(call aws_cf_build_params,$(3)),) \
-  $(if $(4),--capabilities $(4),) \
+  $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cf_build_params,$(3)))) \
+  $(if $(5),--capabilities $(5)) \
   --tags \
     Key=GitCommit,Value=$(git_commit) \
     Key=GitBranch,Value=$(git_branch) \
@@ -90,14 +91,15 @@ endef
 
 # 1. stack name
 # 2. template
-# 3. stack params
-# 4. stack caps
+# 3. stack param names
+# 4. stack param file
+# 5. stack caps
 define aws_cf_update_stack
 $(strip aws cloudformation update-stack \
   --stack-name $(1) \
   --template-body file://$(2) \
-  $(if $(3),--parameters $(call aws_cf_build_params,$(3)),) \
-  $(if $(4),--capabilities $(4),) \
+  $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cf_build_params,$(3)))) \
+  $(if $(5),--capabilities $(5)) \
   --tags \
     Key=GitCommit,Value=$(git_commit) \
     Key=GitBranch,Value=$(git_branch) \
@@ -108,10 +110,11 @@ endef
 
 # 1. stack name
 # 2. template
-# 3. stack params
-# 4. stack caps
+# 3. stack param names
+# 4. stack param file
+# 5. stack caps
 define aws_cf_sync_stack
 $(if $(call aws_cf_stack_exists?,$(1)), \
-  $(call aws_cf_update_stack,$(1),$(2),$(3),$(4)), \
-  $(call aws_cf_create_stack,$(1),$(2),$(3),$(4)))
+  $(call aws_cf_update_stack,$(1),$(2),$(3),$(4),$(5)), \
+  $(call aws_cf_create_stack,$(1),$(2),$(3),$(4),$(5)))
 endef
