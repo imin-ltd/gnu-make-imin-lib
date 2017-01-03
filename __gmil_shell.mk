@@ -1,4 +1,10 @@
 
+# 1. commands to assert on path
+define shell_assert_commands
+$(foreach cmd,$(1),\
+  $(if $(shell command -v $(cmd) 2> /dev/null),,$(error Command '$(cmd)' not found in PATH)))
+endef
+
 # 1. shell arg
 # 2. handler fn (called with 1. stdout from shell 2. exit status from shell)
 define shell_result
