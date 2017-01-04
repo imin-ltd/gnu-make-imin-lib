@@ -49,13 +49,25 @@ aws_cf_stack_exists? = $(shell aws cloudformation describe-stacks | \
   jq --arg stack $(1) -e '.Stacks[].StackName | select(. == $$stack)')
 
 # 1. stack name
-define aws_cf_stack_events_most_recent_create_failed
+define aws_cf_stack_events_create_complete
+aws cloudformation describe-stack-events --stack-name $(1) | \
+  jq -C '.StackEvents | map(select(.ResourceStatus == "CREATE_COMPLETE")) | .[0] | del(.ResourceProperties) | objects'
+endef
+
+# 1. stack name
+define aws_cf_stack_events_create_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
   jq -C '.StackEvents | map(select(.ResourceStatus == "CREATE_FAILED")) | .[0] | del(.ResourceProperties) | objects'
 endef
 
 # 1. stack name
-define aws_cf_stack_events_most_recent_update_failed
+define aws_cf_stack_events_update_complete
+aws cloudformation describe-stack-events --stack-name $(1) | \
+  jq -C '.StackEvents | map(select(.ResourceStatus == "UPDATE_COMPLETE")) | .[0] | del(.ResourceProperties) | objects'
+endef
+
+# 1. stack name
+define aws_cf_stack_events_update_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
   jq -C '.StackEvents | map(select(.ResourceStatus == "UPDATE_FAILED")) | .[0] | del(.ResourceProperties) | objects'
 endef
@@ -86,7 +98,8 @@ $(strip aws cloudformation create-stack \
     Key=GitBranch,Value=$(git_branch) \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
-aws cloudformation wait stack-create-complete --stack-name $(1) || { $(call aws_cf_stack_events_most_recent_create_failed,$(1)); exit 1; }
+{ aws cloudformation wait stack-create-complete --stack-name $(1) && { $(call aws_cf_stack_events_create_complete,$(1)); exit 0; } } || \
+  { $(call aws_cf_stack_events_create_failed,$(1)); exit 1; }
 endef
 
 # 1. stack name
@@ -105,7 +118,8 @@ $(strip aws cloudformation update-stack \
     Key=GitBranch,Value=$(git_branch) \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
-aws cloudformation wait stack-update-complete --stack-name $(1) || { $(call aws_cf_stack_events_most_recent_update_failed,$(1)); exit 1; }
+{ aws cloudformation wait stack-update-complete --stack-name $(1) && { $(call aws_cf_stack_events_update_complete,$(1)); exit 0; } } || \
+  { $(call aws_cf_stack_events_update_failed,$(1)); exit 1; }
 endef
 
 # 1. stack name
