@@ -57,7 +57,7 @@ endef
 # 1. stack name
 define aws_cf_stack_events_create_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | until(.[0].ResourceStatus == "CREATE_FAILED" and .[1].ResourceStatus != "CREATE_FAILED"; del(.[0])) | .[0] | del(.ResourceProperties) | objects
+  jq -C '.StackEvents | until(.[0].ResourceStatus == "CREATE_FAILED" and .[1].ResourceStatus != "CREATE_FAILED"; del(.[0])) | .[0] | del(.ResourceProperties) | objects'
 endef
 
 # 1. stack name
@@ -69,7 +69,7 @@ endef
 # 1. stack name
 define aws_cf_stack_events_update_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | until(.[0].ResourceStatus == "UPDATE_FAILED" and .[1].ResourceStatus != "UPDATE_FAILED"; del(.[0])) | .[0] | objects
+  jq -C '.StackEvents | until(.[0].ResourceStatus == "UPDATE_FAILED" and .[1].ResourceStatus != "UPDATE_FAILED"; del(.[0])) | .[0] | objects'
 endef
 
 # 1. stack name
@@ -81,7 +81,7 @@ endef
 # 1. stack name
 define aws_cf_stack_events_delete_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | until(.[0].ResourceStatus == "DELETE_FAILED" and .[1].ResourceStatus != "DELETE_FAILED"; del(.[0])) | .[0] | objects
+  jq -C '.StackEvents | until(.[0].ResourceStatus == "DELETE_FAILED" and .[1].ResourceStatus != "DELETE_FAILED"; del(.[0])) | .[0] | objects'
 endef
 
 aws_comma := ,
@@ -153,6 +153,6 @@ endef
 # 1. stack name
 define aws_cf_delete_stack_if_exists
 $(if $(call aws_cf_stack_exists?,$(1)), \
-  $(call aws_cf_delete_stack,$(1)) \
+  $(call aws_cf_delete_stack,$(1)); \
   aws cloudformation wait stack-delete-complete --stack-name $(1) || { $(call aws_cf_stack_events_delete_failed,$(1)); exit 1; })
 endef
