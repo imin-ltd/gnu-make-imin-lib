@@ -51,37 +51,43 @@ aws_cf_stack_exists? = $(shell aws cloudformation describe-stacks | \
 # 1. stack name
 define aws_cf_stack_events_create_complete
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | map(select(.ResourceStatus == "CREATE_COMPLETE")) | .[0] | del(.ResourceProperties) | objects'
+  jq '.StackEvents | map(select(.ResourceStatus == "CREATE_COMPLETE")) | .[0] | del(.ResourceProperties) | objects'
 endef
 
 # 1. stack name
 define aws_cf_stack_events_create_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | until(.[0].ResourceStatus == "CREATE_FAILED" and .[1].ResourceStatus != "CREATE_FAILED"; del(.[0])) | .[0] | del(.ResourceProperties) | objects'
+  jq '.StackEvents | until(.[0].ResourceStatus == "CREATE_FAILED" and .[1].ResourceStatus != "CREATE_FAILED"; del(.[0])) | .[0] | del(.ResourceProperties) | objects'
 endef
 
 # 1. stack name
 define aws_cf_stack_events_update_complete
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | map(select(.ResourceStatus == "UPDATE_COMPLETE")) | .[0] | del(.ResourceProperties) | objects'
+  jq '.StackEvents | map(select(.ResourceStatus == "UPDATE_COMPLETE")) | .[0] | del(.ResourceProperties) | objects'
 endef
 
 # 1. stack name
 define aws_cf_stack_events_update_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | until(.[0].ResourceStatus == "UPDATE_FAILED" and .[1].ResourceStatus != "UPDATE_FAILED"; del(.[0])) | .[0] | objects'
+  jq '.StackEvents | until(.[0].ResourceStatus == "UPDATE_FAILED" and .[1].ResourceStatus != "UPDATE_FAILED"; del(.[0])) | .[0] | objects'
 endef
 
 # 1. stack name
 define aws_cf_stack_events_delete_complete
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | map(select(.ResourceStatus == "DELETE_COMPLETE")) | .[0] | objects'
+  jq '.StackEvents | map(select(.ResourceStatus == "DELETE_COMPLETE")) | .[0] | objects'
 endef
 
 # 1. stack name
 define aws_cf_stack_events_delete_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq -C '.StackEvents | until(.[0].ResourceStatus == "DELETE_FAILED" and .[1].ResourceStatus != "DELETE_FAILED"; del(.[0])) | .[0] | objects'
+  jq '.StackEvents | until(.[0].ResourceStatus == "DELETE_FAILED" and .[1].ResourceStatus != "DELETE_FAILED"; del(.[0])) | .[0] | objects'
+endef
+
+# 1. stack name
+define aws_cf_stack_exports
+aws cloudformation list-exports | \
+  jq --arg stack $(1) '.Exports |= map(select(.ExportingStackId | contains("/$$stack/")) | del(.ExportingStackId))'
 endef
 
 aws_comma := ,
@@ -110,7 +116,8 @@ $(strip aws cloudformation create-stack \
     Key=GitBranch,Value=$(git_branch) \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
-{ aws cloudformation wait stack-create-complete --stack-name $(1) && { $(call aws_cf_stack_events_create_complete,$(1)); exit 0; } } || \
+{ aws cloudformation wait stack-create-complete --stack-name $(1) && \
+  { $(call aws_cf_stack_events_create_complete,$(1)); $(call aws_cf_stack_exports,$(1)); exit 0; } } || \
   { $(call aws_cf_stack_events_create_failed,$(1)); exit 1; }
 endef
 
@@ -130,7 +137,8 @@ $(strip aws cloudformation update-stack \
     Key=GitBranch,Value=$(git_branch) \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
-{ aws cloudformation wait stack-update-complete --stack-name $(1) && { $(call aws_cf_stack_events_update_complete,$(1)); exit 0; } } || \
+{ aws cloudformation wait stack-update-complete --stack-name $(1) && \
+  { $(call aws_cf_stack_events_update_complete,$(1)); $(call aws_cf_stack_exports,$(1)); exit 0; } } || \
   { $(call aws_cf_stack_events_update_failed,$(1)); exit 1; }
 endef
 
