@@ -69,7 +69,7 @@ endef
 # 1. stack name
 define aws_cf_stack_events_update_failed
 aws cloudformation describe-stack-events --stack-name $(1) | \
-  jq '.StackEvents | until(.[0].ResourceStatus == "UPDATE_FAILED" and .[1].ResourceStatus != "UPDATE_FAILED"; del(.[0])) | .[0] | objects'
+  jq '.StackEvents | until(.[0].ResourceStatus == "UPDATE_FAILED" and .[1].ResourceStatus != "UPDATE_FAILED"; del(.[0])) | .[0] | del(.ResourceProperties) | objects'
 endef
 
 # 1. stack name
@@ -87,7 +87,7 @@ endef
 # 1. stack name
 define aws_cf_stack_exports
 aws cloudformation list-exports | \
-  jq --arg stack $(1) '.Exports |= map(select(.ExportingStackId | contains("/$$stack/")) | del(.ExportingStackId))'
+  jq --arg stack $(1) '.Exports |= map(select(.ExportingStackId | contains("/" + $$stack + "/")) | del(.ExportingStackId))'
 endef
 
 aws_comma := ,
