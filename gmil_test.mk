@@ -10,6 +10,8 @@ include gmil
 
 include gmil_shell
 
+include gmil_text
+
 include gmil_aws
 
 $(call shell_assert_commands,$(GMIL_COMMANDS))
@@ -36,6 +38,14 @@ $(call stop_test)
 
 $(call start_test,shell_result_exit_status)
 $(call test_assert,$(call shell_result,$(test_shell_arg),test_handler_exit_status),0)
+$(call stop_test)
+
+$(call start_test,text_dashed_to_title_case)
+$(call test_assert,$(call text_dashed_to_title_case,env-dev),EnvDev)
+$(call stop_test)
+
+$(call start_test,aws_cf_stack_name)
+$(call test_assert,$(call aws_cf_stack_name,cfn-template-xyz.yml),Xyz)
 $(call stop_test)
 
 $(call start_test,aws_s3_get_content_handler)

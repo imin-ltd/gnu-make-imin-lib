@@ -7,6 +7,8 @@ include $(__gmil_aws_root)gmil_shell
 
 include $(__gmil_aws_root)gmil_git
 
+include $(__gmil_aws_root)gmil_text
+
 aws_iam_user_name = $(shell AWS_DEFAULT_PROFILE=default aws iam get-user | jq -r '.User.UserName')
 
 # 1. input
@@ -38,6 +40,11 @@ aws_s3_get_content = $(call shell_result,aws s3 cp s3://$(1) -,aws_s3_get_conten
 # 2. function description
 aws_lambda_publish_version = $(shell aws lambda publish-version --function-name $(1) --description $(2) | \
   jq -r '.Version')
+
+# 1. template
+define aws_cf_stack_name
+$(call text_dashed_to_title_case,$(subst cfn-template-,,$(basename $(1))))
+endef
 
 # 1. template (defaulted)
 define aws_cf_validate_template
