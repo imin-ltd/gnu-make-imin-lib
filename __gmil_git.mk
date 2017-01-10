@@ -1,7 +1,7 @@
 
 GMIL_COMMANDS += git sed jq
 
-include $(__gmil_aws_root)gmil_shell
+include $(__gmil_git_root)gmil_shell
 
 git_commit = $(if $(GIT_COMMIT),$(GIT_COMMIT),$(shell git rev-parse HEAD))
 

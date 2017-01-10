@@ -1,5 +1,5 @@
 
-include $(__gmil_aws_root)gmil
+include $(__gmil_shell_root)gmil
 
 # 1. command to test on path
 shell_command? = $(if $(shell command -v $(1) 2> /dev/null),$(1),)
