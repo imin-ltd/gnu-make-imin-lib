@@ -4,7 +4,8 @@ all:
 	@echo
 	@echo Test Summary
 	@echo ------------
-	@echo "some tests passed; some tests failed"
+	@echo "$(words $(passed)) tests passed; $(words $(failed)) tests failed"
+	@exit $(if $(failed),1,0)
 
 include gmil
 
@@ -20,8 +21,8 @@ ECHO := /bin/echo
 
 start_test = $(if $0,$(shell $(ECHO) -n "Testing '$1': " >&2))$(eval current_test := OK)
 stop_test = $(if $0,$(shell $(ECHO) " $(current_test)" >&2))
-test_pass = .
-test_fail = X$(eval current_test := ERROR '$1' != '$2')
+test_pass = .$(eval passed += p)
+test_fail = X$(eval failed += f)$(eval current_test := ERROR '$1' != '$2')
 test_assert = $(if $0,\
   $(if $(filter undefined,$(origin 2)),\
     $(eval 2 :=))$(shell $(ECHO) -n $(if $(call eq,$1,$2),$(call test_pass,$1,$2),$(call test_fail,$1,$2)) >&2))
