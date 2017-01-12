@@ -10,9 +10,24 @@ INCLUDEDIR = $(PREFIX)/include
 .PHONY: dist
 dist: $(TAR)
 
-SOURCES = gmil __gmil.mk gmil_shell __gmil_shell.mk gmil_aws __gmil_aws.mk gmil_json __gmil_json.mk gmil_git __gmil_git.mk gmil_text __gmil_text.mk
+define SOURCES
+gmil
+__gmil.mk
+gmil_shell
+__gmil_shell.mk
+gmil_aws
+__gmil_aws.mk
+gmil_json
+__gmil_json.mk
+gmil_git
+__gmil_git.mk
+gmil_text
+__gmil_text.mk
+gmil_kong
+__gmil_kong.mk
+endef
 
-$(TAR): $(SOURCES)
+$(TAR): $(strip $(SOURCES))
 	@echo Making $@
 	@rm -rf $(DIST)
 	@mkdir $(DIST)
@@ -25,9 +40,9 @@ test:
 	@$(MAKE) --no-print-directory -f gmil_test.mk
 
 .PHONY: install
-install: $(SOURCES)
+install: $(strip $(SOURCES))
 	install -D $^ $(INCLUDEDIR)/
 
 .PHONY: uninstall
-uninstall: $(SOURCES)
-	rm -f $(addprefix $(INCLUDEDIR)/,$(SOURCES))
+uninstall: $(strip $(SOURCES))
+	rm -f $(addprefix $(INCLUDEDIR)/,$(strip $(SOURCES)))

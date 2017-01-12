@@ -1,0 +1,30 @@
+
+# Determine if the library has already been included and if so don't
+# bother including it again
+
+ifndef __gmil_kong_included
+
+# Prevent reinclusion of the library
+
+__gmil_kong_included := $(true)
+
+# Try to determine where this file is located.  If the caller did
+# include /foo/gmil_kong then extract the /foo/ so that __gmil_kong gets
+# included transparently
+
+__gmil_kong_root :=
+
+ifneq ($(MAKEFILE_LIST),)
+__gmil_kong_root := $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+
+# If there are any spaces in the path in __gmil_kong_root then give up
+
+ifeq (1,$(words $(__gmil_kong_root)))
+__gmil_kong_root := $(patsubst %gmil_kong,%,$(__gmil_kong_root))
+endif
+
+endif
+
+include $(__gmil_kong_root)__gmil_kong.mk
+
+endif # __gmil_kong_included

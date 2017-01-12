@@ -15,6 +15,8 @@ include gmil_text
 
 include gmil_aws
 
+include gmil_kong
+
 $(call shell_assert_commands,$(GMIL_COMMANDS))
 
 ECHO := /bin/echo
@@ -51,4 +53,9 @@ $(call stop_test)
 
 $(call start_test,aws_s3_get_content_handler)
 $(call test_assert,$(call aws_s3_get_content_handler,$(test_json),0),$(test_json))
+$(call stop_test)
+
+$(call start_test,kong_http_opts)
+$(call test_assert,$(call kong_http_opts,GMIL_HTTP_INSECURE),$(GMIL_HTTP_INSECURE))
+$(call test_assert,$(call kong_http_opts,GMIL_HTTP_INSECURE GMIL_HTTP_INSECURE),$(GMIL_HTTP_INSECURE))
 $(call stop_test)
