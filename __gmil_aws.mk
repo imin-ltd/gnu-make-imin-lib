@@ -41,6 +41,34 @@ aws_s3_get_content = $(call shell_result,aws s3 cp s3://$(1) -,aws_s3_get_conten
 aws_lambda_publish_version = $(shell aws lambda publish-version --function-name $(1) --description $(2) | \
   jq -r '.Version')
 
+# 1. group id
+# 2. protocol; currently ignored
+# 3. port
+# 4. cidr; currently ignored
+define aws_ec2_security_group_ingress_exists?
+$(shell aws ec2 describe-security-groups --group-ids $(1) | \
+  jq -r --argjson port $(3) '.SecurityGroups[] | select(.IpPermissions[] | .FromPort == $$port and .ToPort == $$port) | .GroupId')
+endef
+
+# 1. group id
+# 2. protocol (default tcp)
+# 3. port
+# 4. cidr (default 0.0.0.0/0)
+define aws_ec2_authorize_security_group_ingress
+$(if $(call aws_ec2_security_group_ingress_exists?,$(1),$(2),$(3),$(4)), \
+  , \
+  aws ec2 authorize-security-group-ingress --group-id $(1) --protocol $(if $(2),$(2),tcp) --port $(3) --cidr $(if $(4),$(4),0.0.0.0/0))
+endef
+
+# 1. group id
+# 2. protocol (default tcp)
+# 3. port
+# 4. cidr (default 0.0.0.0/0)
+define aws_ec2_revoke_security_group_ingress
+$(if $(call aws_ec2_security_group_ingress_exists?,$(1),$(2),$(3),$(4)), \
+  aws ec2 revoke-security-group-ingress --group-id $(1) --protocol $(if $(2),$(2),tcp) --port $(3) --cidr $(if $(4),$(4),0.0.0.0/0))
+endef
+
 # 1. template
 define aws_cf_stack_name
 $(call text_dashed_to_title_case,$(subst cfn-template-,,$(basename $(1))))
