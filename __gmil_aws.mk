@@ -70,42 +70,42 @@ $(if $(call aws_ec2_security_group_ingress_exists?,$(1),$(2),$(3),$(4)), \
 endef
 
 # 1. template
-define aws_cf_stack_name
+define aws_cfn_stack_name
 $(call text_title_case,$(subst cfn-template-,,$(basename $(1))))
 endef
 
 # 1. template (defaulted)
-define aws_cf_validate_template
+define aws_cfn_validate_template
 aws cloudformation validate-template --template-body file://$(if $(1),$(1),cf-template.yml) > /dev/null
 endef
 
 # 1. stack name
-aws_cf_stack_exists? = $(shell aws cloudformation describe-stacks | \
+aws_cfn_stack_exists? = $(shell aws cloudformation describe-stacks | \
   jq --arg stack $(1) -e '.Stacks[].StackName | select(. == $$stack)')
 
 __gmil_now := $(shell date -Iseconds)
 
 # 1. stack name
 # 2. since
-define aws_cf_stack_events
+define aws_cfn_stack_events
 aws cloudformation describe-stack-events --stack-name $(1) | \
   jq --arg since $(__gmil_now) '.StackEvents |= map(select(.Timestamp >= $$since) | del(.ResourceProperties))'
 endef
 
 # 1. stack name
-define aws_cf_stack_exports
+define aws_cfn_stack_exports
 aws cloudformation list-exports | \
   jq -S --arg stack $(1) '.Exports |= map(select(.ExportingStackId | contains("/" + $$stack + "/")) | del(.ExportingStackId))'
 endef
 
 # 1. export name
-define aws_cf_stack_export_value
+define aws_cfn_stack_export_value
 $(shell aws cloudformation list-exports | \
   jq -r -e --arg name $(1) '.Exports[] | select(.Name == $$name) | .Value')
 endef
 
 # 1. stack param names
-define aws_cf_build_params
+define aws_cfn_build_params
 $(strip \
   $(foreach param_name,$(1), \
     $(if $($(param_name)), \
@@ -117,11 +117,11 @@ endef
 # 3. stack param names
 # 4. stack param file
 # 5. stack caps
-define aws_cf_create_stack
+define aws_cfn_create_stack
 $(strip aws cloudformation create-stack \
   --stack-name $(1) \
   --template-body file://$(2) \
-  $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cf_build_params,$(3)))) \
+  $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cfn_build_params,$(3)))) \
   $(if $(5),--capabilities $(5)) \
   --tags \
     Key=GitCommit,Value=$(git_commit) \
@@ -129,8 +129,8 @@ $(strip aws cloudformation create-stack \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
 { aws cloudformation wait stack-create-complete --stack-name $(1) && \
-  { $(call aws_cf_stack_events,$(1)); $(call aws_cf_stack_exports,$(1)); exit 0; } } || \
-  { $(call aws_cf_stack_events,$(1)); exit 1; }
+  { $(call aws_cfn_stack_events,$(1)); $(call aws_cfn_stack_exports,$(1)); exit 0; } } || \
+  { $(call aws_cfn_stack_events,$(1)); exit 1; }
 endef
 
 # 1. stack name
@@ -138,11 +138,11 @@ endef
 # 3. stack param names
 # 4. stack param file
 # 5. stack caps
-define aws_cf_update_stack
+define aws_cfn_update_stack
 $(strip aws cloudformation update-stack \
   --stack-name $(1) \
   --template-body file://$(2) \
-  $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cf_build_params,$(3)))) \
+  $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cfn_build_params,$(3)))) \
   $(if $(5),--capabilities $(5)) \
   --tags \
     Key=GitCommit,Value=$(git_commit) \
@@ -150,8 +150,8 @@ $(strip aws cloudformation update-stack \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
 { aws cloudformation wait stack-update-complete --stack-name $(1) && \
-  { $(call aws_cf_stack_events,$(1)); $(call aws_cf_stack_exports,$(1)); exit 0; } } || \
-  { $(call aws_cf_stack_events,$(1)); exit 1; }
+  { $(call aws_cfn_stack_events,$(1)); $(call aws_cfn_stack_exports,$(1)); exit 0; } } || \
+  { $(call aws_cfn_stack_events,$(1)); exit 1; }
 endef
 
 # 1. stack name
@@ -159,20 +159,20 @@ endef
 # 3. stack param names
 # 4. stack param file
 # 5. stack caps
-define aws_cf_sync_stack
-$(if $(call aws_cf_stack_exists?,$(1)), \
-  $(call aws_cf_update_stack,$(1),$(2),$(3),$(4),$(5)), \
-  $(call aws_cf_create_stack,$(1),$(2),$(3),$(4),$(5)))
+define aws_cfn_sync_stack
+$(if $(call aws_cfn_stack_exists?,$(1)), \
+  $(call aws_cfn_update_stack,$(1),$(2),$(3),$(4),$(5)), \
+  $(call aws_cfn_create_stack,$(1),$(2),$(3),$(4),$(5)))
 endef
 
 # 1. stack name
-define aws_cf_delete_stack_and_wait
+define aws_cfn_delete_stack_and_wait
 aws cloudformation delete-stack --stack-name $(1)
 aws cloudformation wait stack-delete-complete --stack-name $(1) || \
-  { $(call aws_cf_stack_events,$(1)); exit 1; }
+  { $(call aws_cfn_stack_events,$(1)); exit 1; }
 endef
 
 # 1. stack name
-define aws_cf_delete_stack
-$(if $(call aws_cf_stack_exists?,$(1)),$(call aws_cf_delete_stack_and_wait,$(1)))
+define aws_cfn_delete_stack
+$(if $(call aws_cfn_stack_exists?,$(1)),$(call aws_cfn_delete_stack_and_wait,$(1)))
 endef

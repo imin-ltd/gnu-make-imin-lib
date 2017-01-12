@@ -50,8 +50,8 @@ $(call test_assert,$(call text_title_case,ENV-DEV),EnvDev)
 $(call test_assert,$(call text_title_case,ENV_DEV),EnvDev)
 $(call stop_test)
 
-$(call start_test,aws_cf_stack_name)
-$(call test_assert,$(call aws_cf_stack_name,cfn-template-xyz.yml),Xyz)
+$(call start_test,aws_cfn_stack_name)
+$(call test_assert,$(call aws_cfn_stack_name,cfn-template-xyz.yml),Xyz)
 $(call stop_test)
 
 $(call start_test,aws_s3_get_content_handler)
