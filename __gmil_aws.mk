@@ -94,17 +94,23 @@ endef
 # 1. stack name
 define aws_cf_stack_exports
 aws cloudformation list-exports | \
-  jq --arg stack $(1) '.Exports |= map(select(.ExportingStackId | contains("/" + $$stack + "/")) | del(.ExportingStackId))'
+  jq -S --arg stack $(1) '.Exports |= map(select(.ExportingStackId | contains("/" + $$stack + "/")) | del(.ExportingStackId))'
+endef
+
+# 1. export name
+define aws_cf_stack_export_value
+$(shell aws cloudformation list-exports | \
+  jq -r -e --arg name $(1) '.Exports[] | select(.Name == $$name) | .Value')
 endef
 
 aws_comma := ,
 
-# 1. stack params
+# 1. stack param names
 define aws_cf_build_params
 $(strip \
-  $(foreach param,$(1), \
+  $(foreach param_name,$(1), \
     $(if $($(param)), \
-      ParameterKey=$(param)$(aws_comma)ParameterValue='$(subst $(aws_comma),\$(aws_comma),$($(param)))')))
+      ParameterKey=$(param_name)$(aws_comma)ParameterValue='$(subst $(aws_comma),\$(aws_comma),$($(param_name)))')))
 endef
 
 # 1. stack name
