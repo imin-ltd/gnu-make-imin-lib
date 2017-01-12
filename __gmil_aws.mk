@@ -166,13 +166,13 @@ $(if $(call aws_cf_stack_exists?,$(1)), \
 endef
 
 # 1. stack name
-define aws_cf_delete_stack
+define aws_cf_delete_stack_and_wait
 aws cloudformation delete-stack --stack-name $(1)
+aws cloudformation wait stack-delete-complete --stack-name $(1) || \
+  { $(call aws_cf_stack_events,$(1)); exit 1; }
 endef
 
 # 1. stack name
-define aws_cf_delete_stack_if_exists
-$(if $(call aws_cf_stack_exists?,$(1)), \
-  $(call aws_cf_delete_stack,$(1)); \
-  aws cloudformation wait stack-delete-complete --stack-name $(1) || { $(call aws_cf_stack_events,$(1)); exit 1; })
+define aws_cf_delete_stack
+$(if $(call aws_cf_stack_exists?,$(1)),$(call aws_cf_delete_stack_and_wait,$(1)))
 endef
