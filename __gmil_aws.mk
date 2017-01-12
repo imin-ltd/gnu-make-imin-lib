@@ -71,7 +71,7 @@ endef
 
 # 1. template
 define aws_cf_stack_name
-$(call text_dashed_to_title_case,$(subst cfn-template-,,$(basename $(1))))
+$(call text_title_case,$(subst cfn-template-,,$(basename $(1))))
 endef
 
 # 1. template (defaulted)

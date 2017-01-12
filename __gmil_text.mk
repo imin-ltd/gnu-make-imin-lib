@@ -1,5 +1,5 @@
 
-GMIL_COMMANDS += tee sed
+GMIL_COMMANDS += sed
 
-# 1. dashed text
-text_dashed_to_title_case = $(shell printf '%s\n' $(1) | tee -a text_dashed_to_title_case.log | sed -r 's/(^|-)([a-z])/\u\2/g')
+# 1. text
+text_title_case = $(shell printf '%s\n' $(1) | sed -r 's/(^|-|_)([A-Za-z])([A-Za-z]*)/\u\2\L\3/g')
