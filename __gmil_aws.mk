@@ -104,14 +104,12 @@ $(shell aws cloudformation list-exports | \
   jq -r -e --arg name $(1) '.Exports[] | select(.Name == $$name) | .Value')
 endef
 
-aws_comma := ,
-
 # 1. stack param names
 define aws_cf_build_params
 $(strip \
   $(foreach param_name,$(1), \
-    $(if $($(param)), \
-      ParameterKey=$(param_name)$(aws_comma)ParameterValue='$(subst $(aws_comma),\$(aws_comma),$($(param_name)))')))
+    $(if $($(param_name)), \
+      ParameterKey=$(param_name)$(__gmil_comma)ParameterValue='$(subst $(__gmil_comma),\$(__gmil_comma),$($(param_name)))')))
 endef
 
 # 1. stack name
