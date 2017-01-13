@@ -9,6 +9,8 @@ gmil_version := 0 1 0
 __gmil_space :=
 __gmil_space +=
 
+__gmil_comma := ,
+
 # 1. first value to compare
 # 2. second value to compare
 eq = $(strip \
