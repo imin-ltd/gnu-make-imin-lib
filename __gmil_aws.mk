@@ -5,8 +5,6 @@ include $(__gmil_aws_root)gmil
 
 include $(__gmil_aws_root)gmil_shell
 
-include $(__gmil_aws_root)gmil_git
-
 include $(__gmil_aws_root)gmil_text
 
 aws_iam_user_name = $(shell AWS_DEFAULT_PROFILE=default aws iam get-user | jq -r '.User.UserName')
@@ -124,8 +122,8 @@ $(strip aws cloudformation create-stack \
   $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cfn_build_params,$(3)))) \
   $(if $(5),--capabilities $(5)) \
   --tags \
-    Key=GitCommit,Value=$(git_commit) \
-    Key=GitBranch,Value=$(git_branch) \
+    Key=GitCommit,Value=$(GIT_COMMIT) \
+    Key=GitBranch,Value=$(GIT_BRANCH) \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
 { aws cloudformation wait stack-create-complete --stack-name $(1) && \
@@ -145,8 +143,8 @@ $(strip aws cloudformation update-stack \
   $(if $(4),--parameters file://$(4),$(if $(3),--parameters $(call aws_cfn_build_params,$(3)))) \
   $(if $(5),--capabilities $(5)) \
   --tags \
-    Key=GitCommit,Value=$(git_commit) \
-    Key=GitBranch,Value=$(git_branch) \
+    Key=GitCommit,Value=$(GIT_COMMIT) \
+    Key=GitBranch,Value=$(GIT_BRANCH) \
     Key=AwsIamUserName,Value=$(aws_iam_user_name) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
 { aws cloudformation wait stack-update-complete --stack-name $(1) && \
