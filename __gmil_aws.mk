@@ -7,7 +7,7 @@ include $(__gmil_aws_root)gmil_shell
 
 include $(__gmil_aws_root)gmil_text
 
-aws_iam_user_name = $(shell AWS_DEFAULT_PROFILE=default aws iam get-user | jq -r '.User.UserName')
+aws_iam_user_name := $(shell AWS_DEFAULT_PROFILE=default aws iam get-user | jq -r '.User.UserName')
 
 # 1. input
 # 2. bucket
@@ -124,7 +124,7 @@ $(strip aws cloudformation create-stack \
   --tags \
     Key=GitCommit,Value=$(GIT_COMMIT) \
     Key=GitBranch,Value=$(GIT_BRANCH) \
-    Key=AwsIamUserName,Value=$(aws_iam_user_name) \
+    $(if $(aws_iam_user_name),Key=AwsIamUserName$(__gmil_comma)Value=$(aws_iam_user_name)) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
 { aws cloudformation wait stack-create-complete --stack-name $(1) && \
   { $(call aws_cfn_stack_events,$(1)); $(call aws_cfn_stack_exports,$(1)); exit 0; } } || \
@@ -145,7 +145,7 @@ $(strip aws cloudformation update-stack \
   --tags \
     Key=GitCommit,Value=$(GIT_COMMIT) \
     Key=GitBranch,Value=$(GIT_BRANCH) \
-    Key=AwsIamUserName,Value=$(aws_iam_user_name) \
+    $(if $(aws_iam_user_name),Key=AwsIamUserName$(__gmil_comma)Value=$(aws_iam_user_name)) \
     Key=AwsCliProfile,Value=$(if $(AWS_DEFAULT_PROFILE),$(AWS_DEFAULT_PROFILE),default))
 { aws cloudformation wait stack-update-complete --stack-name $(1) && \
   { $(call aws_cfn_stack_events,$(1)); $(call aws_cfn_stack_exports,$(1)); exit 0; } } || \
