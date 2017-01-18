@@ -1,5 +1,5 @@
 
-GMIL_COMMANDS += aws jq date
+GMIL_COMMANDS += aws jq date chmod
 
 include $(__gmil_aws_root)gmil
 
@@ -38,6 +38,30 @@ aws_s3_get_content = $(call shell_result,aws s3 cp s3://$(1) -,aws_s3_get_conten
 # 2. function description
 aws_lambda_publish_version = $(shell aws lambda publish-version --function-name $(1) --description $(2) | \
   jq -r '.Version')
+
+# 1. key pair name
+aws_ec2_key_pair_exists? = $(shell aws ec2 describe-key-pairs | \
+  jq -r '.KeyPairs[].KeyName | select(. == "$(1)")')
+
+define aws_ec2_create_key_pair_if_not_exists
+result=$$(aws ec2 create-key-pair --key-name $(1)) && \
+  { printf '%s' "$$result" | jq '.'; \
+    printf '%s' "$$result" | jq -r '.KeyMaterial' > $(1).pem; \
+    chmod 600 $(1).pem }
+endef
+
+# 1. key pair name
+define aws_ec2_create_key_pair
+$(if $(call aws_ec2_key_pair_exists?,$(1)), \
+  , \
+  $(call aws_ec2_create_key_pair_if_not_exists,$(1)))
+endef
+
+# 1. key pair name
+define aws_ec2_delete_key_pair
+$(if $(call aws_ec2_key_pair_exists?,$(1)), \
+  aws ec2 delete-key-pair --key-name $(1))
+endef
 
 # 1. group id
 # 2. protocol; currently ignored
