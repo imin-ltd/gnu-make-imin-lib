@@ -47,7 +47,7 @@ define aws_ec2_create_key_pair_if_not_exists
 result=$$(aws ec2 create-key-pair --key-name $(1)) && \
   { printf '%s' "$$result" | jq '.'; \
     printf '%s' "$$result" | jq -r '.KeyMaterial' > $(1).pem; \
-    chmod 600 $(1).pem }
+    chmod 600 $(1).pem; }
 endef
 
 # 1. key pair name
